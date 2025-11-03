@@ -1,7 +1,3 @@
-// armadilha.go -> funcoes para as armadilhas do jogo
-//go:build !server
-// +build !server
-
 package main
 
 import (

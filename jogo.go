@@ -1,6 +1,3 @@
-//go:build !server
-// +build !server
-
 // jogo.go - Funções para manipular os elementos do jogo, como carregar o mapa e mover o personagem
 package main
 

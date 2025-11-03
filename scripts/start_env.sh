@@ -1,9 +1,3 @@
-#!/usr/bin/env bash
-# Script para iniciar ambiente de integração simples (macOS / Linux)
-# Cria pasta de logs timestamped e inicia servidor + 2 clientes em background.
-# Observação: este script assume que `go` está no PATH e que executar `go run` no repo inicia
-# o servidor e os clientes corretamente. Pode ser necessário ajustar caminhos/flags conforme a implementação.
-
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"

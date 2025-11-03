@@ -1,6 +1,3 @@
-//go:build !server
-// +build !server
-
 // personagem.go - Funções para movimentação e ações do personagem
 package main
 

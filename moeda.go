@@ -1,6 +1,3 @@
-//go:build !server
-// +build !server
-
 // moeda.go -> funcoes para a moeda
 package main
 

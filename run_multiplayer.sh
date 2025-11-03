@@ -2,7 +2,7 @@
 # Script para iniciar servidor e 2 clientes facilmente
 # Uso: ./run_multiplayer.sh
 
-echo "🎮 Iniciando ambiente multiplayer..."
+echo "Iniciando ambiente multiplayer..."
 echo ""
 echo "Instruções:"
 echo "  - Terminal 1: Servidor (este terminal)"

@@ -1,7 +1,3 @@
-//go:build !server
-// +build !server
-
-// debuglog.go
 package main
 
 import (

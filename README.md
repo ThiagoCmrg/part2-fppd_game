@@ -1,5 +1,4 @@
 # Jogo de Terminal em Go (single-player + RPC multiplayer)
-
 Este projeto é um jogo de terminal em Go que agora suporta modo multiplayer via RPC.
 O cliente mantém toda a lógica do jogo e o servidor centraliza o estado dos jogadores (posições, vidas).
 
@@ -8,7 +7,6 @@ Principais pontos:
 - Servidor: mantém lista de jogadores e deduplicação exactly-once por ClientID+Seq; não contém lógica de movimentação nem mapa.
 
 ## Controles (single-player / cliente)
-
 | Tecla | Ação |
 |-------|------|
 | W | Mover para cima |
@@ -19,7 +17,6 @@ Principais pontos:
 | ESC | Sair do jogo |
 
 ## Como rodar (modo RPC multiplayer)
-
 Esta seção mostra passos organizados para rodar o servidor e o(s) cliente(s) tanto em modo de desenvolvimento (go run) quanto compilando binários.
 
 Requisitos
@@ -110,12 +107,12 @@ Notas finais
 ## Estado atual em relação aos requisitos do trabalho
 
 Resumo curto:
-- O servidor gerencia a sessão e o estado dos jogadores (posições, vidas). ✔
-- O servidor não mantém o mapa nem a lógica de movimentação (fica no cliente). ✔
-- Comunicação sempre iniciada pelos clientes; servidor apenas responde. ✔
-- Cliente possui goroutine de polling para `GetState`. ✔
-- Chamadas RPC têm retries/backoff implementados no cliente. ✔
-- Exactly-once (deduplicação por ClientID+Seq) implementado no servidor com TTL e limpeza. ✔
+- O servidor gerencia a sessão e o estado dos jogadores (posições, vidas).
+- O servidor não mantém o mapa nem a lógica de movimentação (fica no cliente).
+- Comunicação sempre iniciada pelos clientes; servidor apenas responde.
+- Cliente possui goroutine de polling para `GetState`.
+- Chamadas RPC têm retries/backoff implementados no cliente.
+- Exactly-once (deduplicação por ClientID+Seq) implementado no servidor com TTL e limpeza.
 
 Notas/pequenas recomendações: Persistência de Seq agora realizada de forma atômica no cliente; recomenda-se adicionar testes de falhas de rede.
 

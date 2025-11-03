@@ -1,6 +1,3 @@
-//go:build !server
-// +build !server
-
 // monstro.go -> funcoes para a movimentacao e etc do monstro
 package main
 

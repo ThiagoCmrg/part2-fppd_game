@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Script de teste automático simples para integração — verifica registros e reinício do servidor
-# Produz um resumo PASS/FAIL básico baseado em buscas nos logs gerados por start_env.sh
 
 set -euo pipefail
 

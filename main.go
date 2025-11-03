@@ -1,6 +1,3 @@
-//go:build !server
-// +build !server
-
 // main.go - Loop principal do jogo
 package main
 
