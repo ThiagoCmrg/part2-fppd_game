@@ -4,112 +4,197 @@ Este projeto é um jogo de terminal em Go que agora suporta modo multiplayer via
 O cliente mantém toda a lógica do jogo e o servidor centraliza o estado dos jogadores (posições, vidas).
 
 Principais pontos:
+
 - Cliente: interface, lógica de movimentação, polling periódico para `GetState` no servidor.
 - Servidor: mantém lista de jogadores e deduplicação exactly-once por ClientID+Seq; não contém lógica de movimentação nem mapa.
 
 ## Controles (single-player / cliente)
 
-| Tecla | Ação |
-|-------|------|
-| W | Mover para cima |
-| A | Mover para esquerda |
-| S | Mover para baixo |
-| D | Mover para direita |
-| E | Interagir |
-| ESC | Sair do jogo |
+| Tecla | Ação                |
+| ----- | ------------------- |
+| W     | Mover para cima     |
+| A     | Mover para esquerda |
+| S     | Mover para baixo    |
+| D     | Mover para direita  |
+| E     | Interagir           |
+| ESC   | Sair do jogo        |
 
 ## Como rodar (modo RPC multiplayer)
 
-Esta seção mostra passos organizados para rodar o servidor e o(s) cliente(s) tanto em modo de desenvolvimento (go run) quanto compilando binários.
+### Requisitos
 
-Requisitos
 - Go 1.18+ instalado
-- Sistema: instruções abaixo usam PowerShell no Windows; em Bash (Linux/macOS) substitua as declarações de ambiente por `export VAR=valor`.
+- Terminal com suporte a cores (para a interface do jogo)
 
-Passo rápido (modo dev)
-- Abra um terminal para o servidor e rode:
+### Opção 1: Usando o script automatizado (macOS/Linux)
 
-```powershell
-# inicia o servidor (usa o main com build tag `server`)
+O jeito mais rápido para testar o multiplayer:
+
+**Terminal 1 - Servidor:**
+
+```bash
+./run_multiplayer.sh
+```
+
+**Terminal 2 - Cliente A:**
+
+```bash
+RPC_ADDR="127.0.0.1:12345" CLIENTID_FILE="clientA.clientid" go run .
+```
+
+**Terminal 3 - Cliente B:**
+
+```bash
+RPC_ADDR="127.0.0.1:12345" CLIENTID_FILE="clientB.clientid" go run .
+```
+
+### Opção 2: Passo a passo manual (qualquer sistema)
+
+**1. Compilar o projeto (uma vez):**
+
+```bash
+go build ./...
+```
+
+**2. Iniciar o servidor (Terminal 1):**
+
+```bash
+# macOS/Linux
+go run -tags server .
+
+# Windows (PowerShell)
 go run -tags server .
 ```
 
-- Abra outro(s) terminal(is) para os clientes e rode em cada um:
+O servidor deve mostrar: `[SERVER] RPC server listening on :12345`
 
-```powershell
-# inicia o cliente (interface + lógica local)
-go run .
+**3. Iniciar o Cliente A (Terminal 2):**
+
+```bash
+# macOS/Linux
+RPC_ADDR="127.0.0.1:12345" CLIENTID_FILE="clientA.clientid" go run .
+
+# Windows (PowerShell)
+$env:RPC_ADDR="127.0.0.1:12345"; $env:CLIENTID_FILE="clientA.clientid"; go run .
 ```
 
-Build (gerar binários)
-- Compilar servidor (gera `gameserver.exe` no Windows):
+**4. Iniciar o Cliente B (Terminal 3):**
 
-```powershell
+```bash
+# macOS/Linux
+RPC_ADDR="127.0.0.1:12345" CLIENTID_FILE="clientB.clientid" go run .
+
+# Windows (PowerShell)
+$env:RPC_ADDR="127.0.0.1:12345"; $env:CLIENTID_FILE="clientB.clientid"; go run .
+```
+
+**O que você deve ver:**
+
+- ✅ No **Terminal do Servidor**: logs mostrando `Registered player` e `Received GetState`
+- ✅ Nos **Clientes** (jogo na tela):
+  - Barra de status mostra: `Jogadores Online: 2`
+  - Um **☺ amarelo** representa o outro jogador
+  - Quando você move um cliente (WASD), o outro vê o movimento em tempo real
+
+### Opção 3: Compilar binários (para distribuição)
+
+**Servidor:**
+
+```bash
+# macOS/Linux
+go build -tags server -o gameserver .
+./gameserver
+
+# Windows
 go build -tags server -o gameserver.exe .
-.\\gameserver.exe
+.\gameserver.exe
 ```
 
-- Compilar cliente (`jogo.exe`):
+**Cliente:**
 
-```powershell
+```bash
+# macOS/Linux
+go build -o jogo .
+RPC_ADDR="127.0.0.1:12345" CLIENTID_FILE="clientA.clientid" ./jogo
+
+# Windows
 go build -o jogo.exe .
-.\\jogo.exe
+$env:RPC_ADDR="127.0.0.1:12345"; $env:CLIENTID_FILE="clientA.clientid"; .\jogo.exe
 ```
 
-Executando com variáveis de ambiente úteis
-- Definir porta do servidor (ex.: 8080):
+### Variáveis de ambiente úteis
 
-```powershell
-$env:GAME_PORT = "8080"
-go run -tags server .
+### Variáveis de ambiente úteis
+
+**Cliente:**
+
+- `RPC_ADDR` ou `SERVER_ADDR`: Endereço do servidor (padrão: `127.0.0.1:12345`)
+- `CLIENTID_FILE`: Arquivo para persistir o ID do cliente (padrão: `.clientid`)
+- `CLIENT_ID`: Forçar um ID específico (ignora arquivo)
+- `POLL_MS`: Intervalo de polling em milissegundos (padrão: `300`)
+- `DEBUG`: Ativar logs detalhados no stderr (`DEBUG=1`)
+- `DEBUG_PANEL`: Mostrar logs em painel de debug na tela (`DEBUG_PANEL=1`)
+- `CLIENT_LOG`: Gravar logs em arquivo (ex: `CLIENT_LOG=client.log`)
+
+**Servidor:**
+
+- `GAME_PORT`: Porta do servidor (padrão: `12345`)
+
+### Troubleshooting
+
+**Problema: "address already in use"**
+
+```bash
+# Matar processo na porta 12345
+lsof -ti:12345 | xargs kill -9
 ```
 
-- Forçar endereço do servidor ou ClientID no cliente:
+**Problema: Clientes não conectam**
 
-```powershell
-$env:SERVER_ADDR = "127.0.0.1:12345"
-$env:CLIENT_ID = "playerA"
-go run .
-```
+1. Verifique se o servidor está rodando
+2. Execute cliente com `DEBUG=1` para ver erros de conexão
+3. Confirme que `RPC_ADDR` está correto
 
-Rodar múltiplos clientes localmente
-- Abra múltiplos terminais e execute `go run .` em cada um, ou use o script PowerShell `scripts/start_clients.ps1`:
+**Problema: Não vejo outros jogadores**
 
-```powershell
-# inicia 2 clientes em novos terminais (PowerShell Core assumed for Start-Process pwsh)
-.\\scripts\\start_clients.ps1 -Count 2
-```
+- Verifique os logs do servidor: deve mostrar `Registered player` para cada cliente
+- Nos clientes: barra de status deve mostrar `Jogadores Online: N`
+- Se aparecer `Jogadores Online: 1`, apenas 1 cliente conectou
 
-Polling / intervalos
-- O cliente faz polling de `GetState` periodicamente (padrão 300ms). Para ajustar o intervalo, defina `POLL_MS` em milissegundos:
+### Testes automatizados
 
-```powershell
-$env:POLL_MS = "500"
-go run .
-```
-
-Logs e depuração
-- O servidor e o cliente imprimem informações relevantes no terminal para depuração (requisições recebidas, respostas, erros de RPC e retries).
-
-Testes automatizados
-- Para executar a suíte de testes:
-
-```powershell
+```bash
+# Executar todos os testes
 go test ./...
+
+# Executar testes com cobertura
+go test -cover ./...
+
+# Executar teste específico de RPC
+go test -v -run TestExactlyOnce
 ```
 
-Scripts de ajuda
-- Scripts adicionados em `scripts/`:
-	- `start_server.ps1` — inicia o servidor (aceita parâmetro `-Port`).
-	- `start_clients.ps1` — abre múltiplas instâncias do cliente em terminais novos.
+### Scripts de ajuda
+
+**macOS/Linux:**
+
+- `run_multiplayer.sh` — Inicia o servidor com instruções para os clientes
+
+**Windows (PowerShell):**
+
+- Scripts em `scripts/`:
+  - `start_server.ps1` — inicia o servidor (aceita parâmetro `-Port`)
+  - `start_clients.ps1` — abre múltiplas instâncias do cliente em terminais novos
 
 Notas finais
+
 - O servidor NÃO guarda o mapa nem a lógica de movimentação — isso continua sendo responsabilidade do cliente.
 - A persistência de `Seq` no cliente é atômica (escreve em arquivo temporário e renomeia), garantindo resiliência contra crashes durante a escrita.
 
 ## Estado atual em relação aos requisitos do trabalho
 
 Resumo curto:
+
 - O servidor gerencia a sessão e o estado dos jogadores (posições, vidas). ✔
 - O servidor não mantém o mapa nem a lógica de movimentação (fica no cliente). ✔
 - Comunicação sempre iniciada pelos clientes; servidor apenas responde. ✔
@@ -132,5 +217,3 @@ Notas/pequenas recomendações: Persistência de Seq agora realizada de forma at
 ---
 
 Se quiser, eu adiciono um passo-a-passo mais enxuto para apresentação (1 slide) ou crio scripts `start_server.ps1` / `start_clients.ps1` para automatizar demos locais — quer que eu crie isso agora?
-
-
